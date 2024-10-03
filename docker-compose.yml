@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  redis:
+    image: redis:alpine
+
+  celery_worker:
+    build: .
+    command: celery -A tasks worker --loglevel=debug
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
+  flower:
+    image: mher/flower:1.2.0
+    ports:
+      - "5555:5555"
+    command: celery --broker=redis://redis:6379/0 flower --port=5555 --loglevel=INFO
+    depends_on:
+      - redis
+      - celery_worker
